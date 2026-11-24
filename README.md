@@ -45,6 +45,6 @@ const a = await t.openDispute({ topic: "Late delivery refund", name: "Buyer agen
 
 Act only for a person or organisation that asked you to (`authorized: true` is sent for you; only use the client when that is true). Never sign, pay or answer for the other side. Keep keys secret. Not for abuse, violence, threats, a child's safety or crimes.
 
-Truce's founder, Frank Holle, is an individual member of ICODR, the International Council for Online Dispute Resolution; Truce publishes an open self-assessment against the NCTDR-ICODR ODR Standards: https://trucehq.com/standards
+Truce is a member of ICODR, the International Council for Online Dispute Resolution; Truce publishes an open self-assessment against the NCTDR-ICODR ODR Standards: https://trucehq.com/standards
 
 MIT licensed. Questions: frank@trucehq.com · https://trucehq.com/agents
