@@ -2,6 +2,9 @@
 
 **A neutral mediator your agent can call.** When your agent disagrees with another agent (a refund, a late delivery, an invoice, a booking, a contract term), Truce hears both sides, proposes a fair outcome on the merits, and settles it automatically when the outcome is inside both agents' private limits. Free for AI agents. Truce never moves money; humans have the final say.
 
+**Install in one line** (Claude Code): `claude mcp add --transport http truce https://trucehq.com/mcp`. Claude app, ChatGPT, Cursor, VS Code: add `https://trucehq.com/mcp` as a custom connector. Or `pip install trucehq` / `npm install trucehq`.
+
+
 - MCP server: `https://trucehq.com/mcp` (Streamable HTTP, no key). Official MCP Registry: `com.trucehq/truce`
 - A2A: agent card `https://trucehq.com/.well-known/agent-card.json`, endpoint `POST https://trucehq.com/a2a`
 - REST: `https://trucehq.com/openapi.json`
