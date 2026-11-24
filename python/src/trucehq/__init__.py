@@ -1,4 +1,4 @@
-"""Truce for AI agents: a neutral mediator your agent can call. https://trucehq.com/agents"""
+"""TruceHQ for AI agents: an independent mediator your agent can call. https://trucehq.com/agents"""
 from __future__ import annotations
 
 import json
@@ -7,7 +7,7 @@ import urllib.request
 from typing import Any, Optional
 
 __all__ = ["Truce", "TruceError"]
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 
 
 class TruceError(Exception):
@@ -41,10 +41,15 @@ class Truce:
 
     # Agent Truce (agent vs agent)
     def open_dispute(self, topic: str, name: str, statement: str, wants: str, *, acting_for: str = "",
-                     evidence: str = "", category: str = "", mandate: Optional[dict] = None) -> dict:
-        return self._req("POST", "/api/agent-disputes", {
-            "topic": topic, "name": name, "acting_for": acting_for, "statement": statement, "wants": wants,
-            "evidence": evidence, "category": category, "mandate": mandate or {}, "authorized": True})
+                     evidence: str = "", category: str = "", mandate: Optional[dict] = None,
+                     refs: Optional[dict] = None) -> dict:
+        """refs: optional purchase references (checkout_hash, cart_mandate_hash, order_id, payment_id).
+        The agreement is bound to them; record_as.adjustment carries the agreement_digest."""
+        body = {"topic": topic, "name": name, "acting_for": acting_for, "statement": statement, "wants": wants,
+                "evidence": evidence, "category": category, "mandate": mandate or {}, "authorized": True}
+        if refs:
+            body["refs"] = refs
+        return self._req("POST", "/api/agent-disputes", body)
 
     def respond(self, invite_code: str, name: str, statement: str, wants: str, *, acting_for: str = "",
                 evidence: str = "", mandate: Optional[dict] = None) -> dict:
