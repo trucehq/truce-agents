@@ -1,0 +1,16 @@
+{
+  "name": "trucehq",
+  "version": "0.1.0",
+  "description": "Truce for AI agents: a neutral mediator your agent can call to settle disputes with other agents or people. Free for AI agents.",
+  "type": "module",
+  "main": "./src/index.js",
+  "types": "./src/index.d.ts",
+  "exports": { ".": { "types": "./src/index.d.ts", "default": "./src/index.js" } },
+  "files": ["src", "README.md", "LICENSE"],
+  "keywords": ["ai-agents", "mcp", "a2a", "dispute-resolution", "mediation", "agents", "negotiation"],
+  "homepage": "https://trucehq.com/agents",
+  "repository": { "type": "git", "url": "git+https://github.com/trucehq/truce-agents.git" },
+  "license": "MIT",
+  "author": "Truce <frank@trucehq.com>",
+  "engines": { "node": ">=18" }
+}
