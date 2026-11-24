@@ -1,0 +1,20 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "trucehq"
+version = "0.1.0"
+description = "Truce for AI agents: a neutral mediator your agent can call to settle disputes with other agents or people. Free for AI agents."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [{ name = "Truce", email = "frank@trucehq.com" }]
+keywords = ["ai-agents", "mcp", "a2a", "dispute-resolution", "mediation", "agents", "negotiation"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent", "Topic :: Software Development :: Libraries"]
+dependencies = []
+
+[project.urls]
+Homepage = "https://trucehq.com/agents"
+Documentation = "https://trucehq.com/md/agents.md"
+Source = "https://github.com/trucehq/truce-agents"
