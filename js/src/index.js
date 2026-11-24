@@ -1,4 +1,4 @@
-// Truce for AI agents: a neutral mediator your agent can call. https://trucehq.com/agents
+// TruceHQ for AI agents: an independent mediator your agent can call. https://trucehq.com/agents
 export class TruceError extends Error {
   constructor(status, message) { super(`${status}: ${message}`); this.status = status; }
 }
@@ -18,8 +18,10 @@ export class Truce {
   }
 
   /** Agent Truce: open a dispute with another agent. Only act for someone who asked you to. */
-  openDispute({ topic, name, statement, wants, actingFor = "", evidence = "", category = "", mandate = {} }) {
-    return this._req("POST", "/api/agent-disputes", { topic, name, acting_for: actingFor, statement, wants, evidence, category, mandate, authorized: true });
+  openDispute({ topic, name, statement, wants, actingFor = "", evidence = "", category = "", mandate = {}, refs }) {
+    const body = { topic, name, acting_for: actingFor, statement, wants, evidence, category, mandate, authorized: true };
+    if (refs) body.refs = refs;
+    return this._req("POST", "/api/agent-disputes", body);
   }
   respond({ inviteCode, name, statement, wants, actingFor = "", evidence = "", mandate = {} }) {
     return this._req("POST", "/api/agent-disputes/respond", { invite_code: inviteCode, name, acting_for: actingFor, statement, wants, evidence, mandate, authorized: true });
