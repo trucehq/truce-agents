@@ -1,0 +1,40 @@
+name: Publish agent plugins to npm
+
+# Manual only: Actions > Publish agent plugins to npm > Run workflow.
+# Needs the repository secret NPM_TOKEN (an npm granular access token with
+# read and write access to the @trucehq scope), added by the account owner.
+on:
+  workflow_dispatch:
+    inputs:
+      package:
+        description: Which plugin to publish
+        type: choice
+        options: [both, plugin-eliza, agentkit]
+        default: both
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        dir: [plugin-eliza, agentkit]
+    steps:
+      - uses: actions/checkout@v4
+        if: inputs.package == 'both' || inputs.package == matrix.dir
+      - uses: actions/setup-node@v4
+        if: inputs.package == 'both' || inputs.package == matrix.dir
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Install, test, build and publish
+        if: inputs.package == 'both' || inputs.package == matrix.dir
+        working-directory: plugins/${{ matrix.dir }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm install
+          npm publish --access public --provenance
