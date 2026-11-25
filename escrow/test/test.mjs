@@ -1,4 +1,3 @@
-// Local tests for TruceEscrow. Keys below are ganache's public, deterministic TEST keys: never use them on a real network.
 import solc from 'solc'; import fs from 'fs'; import ganache from 'ganache'; import { ethers } from 'ethers'; import assert from 'assert';
 const src=fs.readFileSync(new URL('../contracts/TruceEscrow.sol', import.meta.url),'utf8');
 const out=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources:{'E.sol':{content:src}},settings:{evmVersion:'paris',optimizer:{enabled:true,runs:200},outputSelection:{'*':{'*':['abi','evm.bytecode.object']}}}})));
@@ -6,7 +5,8 @@ if(out.errors) for(const e of out.errors) console.log(e.severity, e.formattedMes
 const c=out.contracts['E.sol'].TruceEscrow;
 const g=ganache.provider({logging:{quiet:true},wallet:{totalAccounts:3,deterministic:true},chain:{chainId:1337}});
 const p=new ethers.BrowserProvider(g,undefined,{cacheTimeout:-1}); const [buyer,seller,other]=await Promise.all([0,1,2].map(i=>p.getSigner(i)));
-const E=await new ethers.ContractFactory(c.abi,c.evm.bytecode.object,buyer).deploy(); await E.waitForDeployment();
+const E=await new ethers.ContractFactory(c.abi,c.evm.bytecode.object,buyer).deploy([ethers.ZeroAddress],[ethers.parseEther('5')]); await E.waitForDeployment();
+await assert.rejects(new ethers.ContractFactory(c.abi,c.evm.bytecode.object,buyer).deploy([],[]));
 const now=async()=>(await p.getBlock('latest')).timestamp;
 const jump=async s=>{await p.send('evm_increaseTime',[s]); await p.send('evm_mine',[]);};
 const bal=a=>p.getBalance(a);
@@ -34,7 +34,7 @@ await (await E.connect(other).settle(id,v.toSeller,v.toBuyer,dg,sb,ss)).wait();
 assert.equal(await bal(seller.address)-s0,v.toSeller); assert.equal(await bal(buyer.address)-b0,v.toBuyer); console.log('ok settle');
 // replay rejected
 await assert.rejects(E.connect(other).settle(id,v.toSeller,v.toBuyer,dg,sb,ss)); console.log('ok no replay');
-// 4 dispute timeout splits evenly
+// 4 dispute timeout refunds buyer
 id=await open(); await (await E.connect(seller).dispute(id)).wait(); await assert.rejects(E.connect(other).expire(id)); await jump(DAY+1);
 const b1=await bal(buyer.address), s1=await bal(seller.address); await (await E.connect(other).expire(id)).wait(); assert.equal(await bal(buyer.address)-b1,ONE/2n); assert.equal(await bal(seller.address)-s1,ONE/2n); console.log('ok expire (even split)');
 // 5 non-party cannot dispute/release; seller refund works
@@ -44,18 +44,24 @@ const b2=await bal(buyer.address); await (await E.connect(seller).refund(id)).wa
 const msrc=fs.readFileSync(new URL('./mocks/Tokens.sol', import.meta.url),'utf8');
 const mo=JSON.parse(solc.compile(JSON.stringify({language:'Solidity',sources:{'T.sol':{content:msrc}},settings:{evmVersion:'paris',outputSelection:{'*':{'*':['abi','evm.bytecode.object']}}}})));
 const T=1000000n;
+// cap: native over the limit is refused, unlisted token is refused
+await assert.rejects(E.connect(buyer).open(seller.address,ethers.ZeroAddress,ethers.parseEther('6'),(await now())+DAY,DAY,{value:ethers.parseEther('6')})); console.log('ok cap');
 for (const name of ['Std','NoReturn','Fee']) {
   const m=mo.contracts['T.sol'][name]; const tok=await new ethers.ContractFactory(m.abi,m.evm.bytecode.object,buyer).deploy(); await tok.waitForDeployment();
   await (await tok.mint(buyer.address,T)).wait(); await (await tok.approve(await E.getAddress(),T)).wait();
-  const r=await (await E.connect(buyer).open(seller.address,await tok.getAddress(),T,(await now())+DAY,DAY)).wait();
-  const tid=E.interface.parseLog(r.logs.find(l=>l.address===E.target)).args.id; const held=(await E.deals(tid)).amount;
+  await assert.rejects(E.connect(buyer).open(seller.address,await tok.getAddress(),T,(await now())+DAY,DAY)); // not listed on E
+  const E2=await new ethers.ContractFactory(c.abi,c.evm.bytecode.object,buyer).deploy([await tok.getAddress()],[T]); await E2.waitForDeployment();
+  await (await tok.approve(await E2.getAddress(),T)).wait();
+  const r=await (await E2.connect(buyer).open(seller.address,await tok.getAddress(),T,(await now())+DAY,DAY)).wait();
+  const tid=E2.interface.parseLog(r.logs.find(l=>l.address===E2.target)).args.id; const held=(await E2.deals(tid)).amount;
   assert.equal(held, name==='Fee'? T-T/100n : T);
   const toS=held/4n, toB=held-toS, dg=ethers.id('agreement');
-  const dom={name:'TruceEscrow',version:'1',chainId:1337,verifyingContract:await E.getAddress()};
+  const dom={name:'TruceEscrow',version:'1',chainId:1337,verifyingContract:await E2.getAddress()};
   const ty={Settle:[{name:'dealId',type:'uint256'},{name:'toSeller',type:'uint256'},{name:'toBuyer',type:'uint256'},{name:'agreementDigest',type:'bytes32'}]};
   const v={dealId:tid,toSeller:toS,toBuyer:toB,agreementDigest:dg};
+  const wB=new ethers.Wallet('0x4f3edf983ac636a65a842ce7c78d9aa706d3b113bce9c46f30d7d21715b23b1d'), wS=new ethers.Wallet('0x6cbed15c793ce57650b9877cf6fa156fbef513c4e6134f022a85b1ffdd59b2a1');
   const s1=await tok.balanceOf(seller.address);
-  await (await E.connect(other).settle(tid,toS,toB,dg,await K[0].signTypedData(dom,ty,v),await K[1].signTypedData(dom,ty,v))).wait();
+  await (await E2.connect(other).settle(tid,toS,toB,dg,await wB.signTypedData(dom,ty,v),await wS.signTypedData(dom,ty,v))).wait();
   const got=(await tok.balanceOf(seller.address))-s1; assert.equal(got, name==='Fee'? toS-toS/100n : toS);
   console.log('ok token '+name);
 }
