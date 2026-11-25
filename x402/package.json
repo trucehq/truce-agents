@@ -1,0 +1,16 @@
+{
+  "name": "@trucehq/x402",
+  "version": "0.1.0",
+  "description": "A neutral dispute route for x402 payments: sellers advertise it in their 402, buyers keep receipts and open a Truce when a paid call goes wrong. Free for AI agents. Truce never holds funds.",
+  "type": "module",
+  "main": "./src/index.js",
+  "exports": { ".": "./src/index.js" },
+  "files": ["src", "README.md", "LICENSE"],
+  "scripts": { "test": "node --test test/index.test.js" },
+  "keywords": ["x402", "ai-agents", "payments", "disputes", "mediation", "stablecoin", "usdc", "base", "solana"],
+  "homepage": "https://trucehq.com/agents",
+  "repository": { "type": "git", "url": "git+https://github.com/trucehq/truce-agents.git", "directory": "x402" },
+  "license": "MIT",
+  "author": "Truce <frank@trucehq.com>",
+  "engines": { "node": ">=18" }
+}
