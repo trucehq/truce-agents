@@ -1,7 +1,17 @@
 # TruceEscrow: escrow with a neutral settlement step
 
 A minimal, non-custodial escrow template for agent purchases on EVM chains (Base, Ethereum, Polygon, and others).
-MIT licensed. **Unaudited: get an independent audit before using it with real funds.**
+MIT licensed. **Unaudited.** The live beta below has small, fixed per-deal caps for that reason.
+
+## Live beta on Ethereum mainnet
+
+- Contract: [`0x2f03a0b6ec53d760a9f2da3be10271e603fef0c9`](https://etherscan.io/address/0x2f03a0b6ec53d760a9f2da3be10271e603fef0c9)
+- Deploy transaction: [`0x8bd0f09d…dc2ac`](https://etherscan.io/tx/0x8bd0f09de7956aa7cf1bb6946d41cec19eed9efeb9881a7cb88ca74f36bdc2ac)
+- Accepted, with a per-deal cap set once in the constructor: ETH (0.4 ETH), USDC `0xA0b8…eB48` (1,000), USDT `0xdAC1…1ec7` (1,000). Any other token is rejected.
+- No owner and no admin functions: nobody, including TruceHQ, can change the caps, pause the contract or touch funds.
+- Compiled with solc 0.8.28, optimizer on (200 runs), EVM version cancun.
+
+Test deployment (earlier, uncapped version) on Base Sepolia: `0xe538f22882174fa6fbb781526a4486569d83af47`.
 
 ## How it works
 
@@ -13,10 +23,6 @@ The buyer (or the buyer's agent) locks funds for a seller. Money moves only when
 4. a dispute is open and the dispute timeout passes with no signed split: the funds are split evenly, so neither side gains by stalling.
 
 TruceHQ, or any mediator, never holds keys, never signs and never receives funds here. Only the two parties' own signatures can move money. Mediation stays non-binding: the contract pays out only what both sides signed.
-
-## Test deployment
-
-Base Sepolia (test network only, unaudited, no real funds): [`0xe538f22882174fa6fbb781526a4486569d83af47`](https://sepolia.basescan.org/address/0xe538f22882174fa6fbb781526a4486569d83af47). Mainnet deployment follows an independent audit.
 
 ## Settling a dispute with TruceHQ
 
