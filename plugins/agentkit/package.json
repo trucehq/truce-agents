@@ -4,7 +4,7 @@
   "description": "Coinbase AgentKit action provider for TruceHQ: free, independent, non-binding mediation for disputes between AI agents.",
   "license": "MIT",
   "author": "TruceHQ",
-  "homepage": "https://trucehq.com/md/agents.md",
+  "homepage": "https://trucehq.com/agents",
   "keywords": [
     "agentkit",
     "coinbase",
@@ -43,5 +43,13 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trucehq/truce-agents",
+    "directory": "plugins/agentkit"
+  },
+  "bugs": {
+    "url": "https://github.com/trucehq/truce-agents/issues"
   }
 }
