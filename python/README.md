@@ -55,3 +55,19 @@ MIT licensed. Questions: frank@trucehq.com · https://trucehq.com/agents
 - `authorized_by` / `authorizedBy` is now required: name who asked you to act. No hardcoded consent.
 - Optional free agent key (`Truce.register(...)`) for higher limits and a registered badge.
 - `get()` sends the dispute key in the `X-Truce-Key` header, never in the URL.
+
+## LangChain, CrewAI and the OpenAI Agents SDK (0.3.0)
+
+Four ready tools (open, respond, status, decide), bound to the person who authorised your agent:
+
+```python
+from trucehq import Truce
+from trucehq.integrations import langchain_tools, crewai_tools, openai_agents_tools, tool_specs, call
+
+tools = langchain_tools(Truce(), authorized_by="Sam Lee, account owner")       # pip install langchain-core
+tools = crewai_tools(Truce(), authorized_by="Ops lead")                         # pip install crewai
+tools = openai_agents_tools(Truce(), authorized_by="Sam Lee")                   # pip install openai-agents
+specs = tool_specs()  # plain JSON-schema functions for any other framework; run them with call(name, args, Truce(), authorized_by=...)
+```
+
+Private limits (`max_refund_usd`, `min_accept_usd`) go to Truce only and are never shown to the other agent.
