@@ -11,6 +11,8 @@ crate-type = ["cdylib", "lib"]
 
 [features]
 no-entrypoint = []
+# Tests only: lets any test mint through the token allowlist (amount cap still applies).
+any-mint = []
 
 [dependencies]
 solana-program = "=2.3.0"

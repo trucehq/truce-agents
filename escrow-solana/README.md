@@ -65,7 +65,11 @@ Accounts for `open`: buyer (signer, writable), seller, deal PDA (writable), syst
 
 Accounts for `release`, `refund`, `claim`, `expire` and `settle`: deal PDA (writable), buyer (writable), seller (writable); for a token deal also vault, buyer's token account, seller's token account (all writable), mint, token program. The recipient token accounts must be owned by the buyer and seller for the deal's mint, so whoever submits `claim` or `expire` cannot redirect the funds.
 
-Times are Unix seconds from the `Clock` sysvar. Program errors (`Custom(n)`): 0 BadState, 1 NotParty, 2 TooEarly, 3 TooLate, 4 BadSplit, 5 BadAccount, 6 TransferFailed, 7 InvalidInstruction, 8 Overflow.
+Times are Unix seconds from the `Clock` sysvar. Program errors (`Custom(n)`): 0 BadState, 1 NotParty, 2 TooEarly, 3 TooLate, 4 BadSplit, 5 BadAccount, 6 TransferFailed, 7 InvalidInstruction, 8 Overflow, 9 Capped.
+
+## Beta caps
+
+Like the EVM contract, this unaudited program caps every deal: at most **5 SOL**, or at most **1,000 USDC or USDT** (classic SPL Token). Other tokens are refused with `Capped` (9) for now; the sections below describe what the code handles once the allowlist is widened. Tests build with `--features any-mint` so test mints pass the allowlist (the amount cap still applies).
 
 ## Coins supported
 
@@ -86,7 +90,7 @@ SOL payouts are credited directly. A recipient wallet with no SOL at all can onl
 ## Build and test
 
 ```
-cargo test
+cargo test --features any-mint
 ```
 
 The tests run on the host: the program runs natively inside `solana-program-test` 2.3 (`processor!` mode) and calls the real SPL Token 3.5, Token-2022 8.0 and Associated Token Account 1.1.1 programs that ship with it.
