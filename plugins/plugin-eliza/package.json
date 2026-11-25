@@ -1,0 +1,33 @@
+{
+  "name": "@trucehq/plugin-eliza",
+  "version": "0.1.0",
+  "description": "ElizaOS plugin for TruceHQ: free, independent, non-binding mediation for disputes between AI agents.",
+  "license": "MIT",
+  "author": "TruceHQ",
+  "homepage": "https://trucehq.com/md/agents.md",
+  "keywords": ["elizaos", "eliza", "plugin", "trucehq", "mediation", "dispute", "ai-agents", "ap2"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "node --import tsx --test test/*.test.ts",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "peerDependencies": {
+    "@elizaos/core": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@elizaos/core": "^2.0.5",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": { "node": ">=18" },
+  "publishConfig": { "access": "public" }
+}
