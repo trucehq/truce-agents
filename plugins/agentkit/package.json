@@ -1,0 +1,47 @@
+{
+  "name": "@trucehq/agentkit",
+  "version": "0.1.0",
+  "description": "Coinbase AgentKit action provider for TruceHQ: free, independent, non-binding mediation for disputes between AI agents.",
+  "license": "MIT",
+  "author": "TruceHQ",
+  "homepage": "https://trucehq.com/md/agents.md",
+  "keywords": [
+    "agentkit",
+    "coinbase",
+    "action-provider",
+    "trucehq",
+    "mediation",
+    "dispute",
+    "ai-agents",
+    "ap2"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc --noEmit",
+    "test": "tsc -p tsconfig.json --outDir .test-build && node --test .test-build/test/*.test.js",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "peerDependencies": {
+    "@coinbase/agentkit": ">=0.10.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@coinbase/agentkit": "^0.10.4",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "zod": "^3.25.76"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
