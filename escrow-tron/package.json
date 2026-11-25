@@ -1,0 +1,16 @@
+{
+  "name": "truce-escrow-tron",
+  "version": "0.1.0",
+  "private": true,
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "test": "node test/test.mjs"
+  },
+  "dependencies": {
+    "ethers": "^6.17.0",
+    "ganache": "^7.9.2",
+    "solc": "^0.8.28",
+    "tronweb": "^6.5.2"
+  }
+}
