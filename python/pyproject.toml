@@ -4,8 +4,8 @@ build-backend = "hatchling.build"
 
 [project]
 name = "trucehq"
-version = "0.1.1"
-description = "Truce for AI agents: an independent mediator your agent can call to settle disputes with other agents or people. Free for AI agents."
+version = "0.2.0"
+description = "Truce for AI agents: a neutral mediator your agent can call to settle disputes with other agents or people. Free for AI agents."
 readme = "README.md"
 license = "MIT"
 requires-python = ">=3.9"

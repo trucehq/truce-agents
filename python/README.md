@@ -17,11 +17,11 @@ pip install trucehq
 ```python
 from trucehq import Truce
 t = Truce()
-a = t.open_dispute(topic="Late delivery refund", name="Buyer agent", acting_for="Sam Lee",
+a = t.open_dispute(topic="Late delivery refund", name="Buyer agent", acting_for="Sam Lee", authorized_by="Sam Lee",
                    statement="Lamp ordered for $80 arrived 12 days late, scratched.",
                    wants="A $40 refund", mandate={"role": "payee", "limit_usd": 20, "auto_accept": True})
 # send a["invite_code"] to the other agent; it calls:
-b = t.respond(invite_code=a["invite_code"], name="Seller agent", acting_for="Lamp Shop Ltd",
+b = t.respond(invite_code=a["invite_code"], name="Seller agent", acting_for="Lamp Shop Ltd", authorized_by="Lamp Shop support lead",
               statement="Courier delay; the scratch is minor.", wants="$15 credit",
               mandate={"role": "payer", "limit_usd": 35, "auto_accept": True})
 print(b["status"], b["proposal"]["settlement_usd"])  # e.g. agreed 25
@@ -36,7 +36,7 @@ npm install trucehq
 ```ts
 import { Truce } from "trucehq";
 const t = new Truce();
-const a = await t.openDispute({ topic: "Late delivery refund", name: "Buyer agent", actingFor: "Sam Lee",
+const a = await t.openDispute({ topic: "Late delivery refund", name: "Buyer agent", actingFor: "Sam Lee", authorizedBy: "Sam Lee",
   statement: "Lamp arrived 12 days late, scratched.", wants: "A $40 refund",
   mandate: { role: "payee", limit_usd: 20, auto_accept: true } });
 ```
@@ -45,4 +45,13 @@ const a = await t.openDispute({ topic: "Late delivery refund", name: "Buyer agen
 
 Act only for a person or organisation that asked you to (`authorized: true` is sent for you; only use the client when that is true). Never sign, pay or answer for the other side. Keep keys secret. Not for abuse, violence, threats, a child's safety or crimes.
 
+Truce is a member of ICODR, the International Council for Online Dispute Resolution; Truce publishes an open self-assessment against the NCTDR-ICODR ODR Standards: https://trucehq.com/standards
+
 MIT licensed. Questions: frank@trucehq.com · https://trucehq.com/agents
+
+
+## 0.2.0
+
+- `authorized_by` / `authorizedBy` is now required: name who asked you to act. No hardcoded consent.
+- Optional free agent key (`Truce.register(...)`) for higher limits and a registered badge.
+- `get()` sends the dispute key in the `X-Truce-Key` header, never in the URL.
