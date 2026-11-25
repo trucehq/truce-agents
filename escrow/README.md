@@ -14,6 +14,10 @@ The buyer (or the buyer's agent) locks funds for a seller. Money moves only when
 
 TruceHQ, or any mediator, never holds keys, never signs and never receives funds here. Only the two parties' own signatures can move money. Mediation stays non-binding: the contract pays out only what both sides signed.
 
+## Test deployment
+
+Base Sepolia (test network only, unaudited, no real funds): [`0xe538f22882174fa6fbb781526a4486569d83af47`](https://sepolia.basescan.org/address/0xe538f22882174fa6fbb781526a4486569d83af47). Mainnet deployment follows an independent audit.
+
 ## Settling a dispute with TruceHQ
 
 1. Either party calls `dispute(dealId)` before the release deadline.
