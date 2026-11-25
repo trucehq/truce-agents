@@ -24,6 +24,8 @@ pub enum EscrowError {
     InvalidInstruction = 7,
     /// Arithmetic overflow.
     Overflow = 8,
+    /// Beta cap: amount above the per-deal limit, or a token that is not supported yet.
+    Capped = 9,
 }
 
 impl From<EscrowError> for ProgramError {

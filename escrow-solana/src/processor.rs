@@ -147,6 +147,29 @@ fn transfer_checked_ix(
     }
 }
 
+/// Beta caps, like the EVM contract: this program is unaudited, so each deal is small.
+/// SOL: at most 5 SOL. Tokens: only USDC and USDT (classic SPL Token), at most 1,000 each.
+pub const MAX_SOL_LAMPORTS: u64 = 5_000_000_000;
+pub const MAX_STABLE_UNITS: u64 = 1_000_000_000; // 1,000 with 6 decimals
+pub const USDC_MINT: Pubkey = solana_program::pubkey!("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+pub const USDT_MINT: Pubkey = solana_program::pubkey!("Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB");
+
+fn check_cap(mint: Option<&Pubkey>, amount: u64) -> ProgramResult {
+    let ok = match mint {
+        None => amount <= MAX_SOL_LAMPORTS,
+        Some(m) if cfg!(feature = "any-mint") => {
+            let _ = m;
+            amount <= MAX_STABLE_UNITS
+        }
+        Some(m) => (*m == USDC_MINT || *m == USDT_MINT) && amount <= MAX_STABLE_UNITS,
+    };
+    if ok {
+        Ok(())
+    } else {
+        Err(EscrowError::Capped.into())
+    }
+}
+
 fn open(
     program_id: &Pubkey,
     accounts: &[AccountInfo],
@@ -199,6 +222,7 @@ fn open(
     };
 
     if it.len() == 0 {
+        check_cap(None, amount)?;
         // SOL: the lamports sit in the deal account itself, on top of its rent.
         invoke(
             &system_instruction::transfer(buyer.key, deal_ai.key, amount),
@@ -213,6 +237,7 @@ fn open(
         if !is_token_program(token_program.key) || *ata_program.key != ASSOCIATED_TOKEN_PROGRAM_ID {
             return Err(EscrowError::BadAccount.into());
         }
+        check_cap(Some(mint.key), amount)?;
         let decimals = mint_decimals(mint, token_program.key)?;
         if *vault.key != associated_token_address(deal_ai.key, mint.key, token_program.key) {
             return Err(EscrowError::BadAccount.into());
