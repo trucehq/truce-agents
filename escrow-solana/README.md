@@ -4,7 +4,7 @@ A minimal, non-custodial escrow program for agent purchases on Solana. Native Ru
 The same semantics as the EVM TruceEscrow contract.
 MIT licensed. **Unaudited: get an independent audit before using it with real funds.**
 
-**Not deployed.** There is no program id on any cluster yet. The id in the tests is a placeholder.
+**Devnet:** program id `2hT144JhvfuVyrtfyAktsmgtLtiVqnYqSWWYivp6jhki` (deployed 25 Nov 2026, beta caps below). **Not on mainnet yet**: mainnet follows an independent audit. The id in the tests is a placeholder.
 
 ## How it works
 
