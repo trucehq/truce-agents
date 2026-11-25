@@ -498,7 +498,7 @@ impl<'a, 'b> Payout<'a, 'b> {
                     self.buyer.lamports().checked_add(all).ok_or(EscrowError::Overflow)?;
             }
         }
-        self.deal_ai.resize(0)?;
+        self.deal_ai.realloc(0, false)?; // realloc: also builds with older solana-program (Solana Playground)
         self.deal_ai.assign(&system_program::ID);
 
         let mut fields: Vec<&[u8]> = Vec::with_capacity(5);
