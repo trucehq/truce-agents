@@ -11,7 +11,10 @@ pragma solidity ^0.8.24;
 ///           4. a dispute is open and the dispute timeout passes with no signed settlement:
 ///              the funds are split evenly, so neither side gains by stalling.
 ///         TruceHQ (or any mediator) never holds keys, never signs and never receives funds here:
-///         only the two parties' own signatures can move money. Unaudited template: audit before use.
+///         only the two parties' own signatures can move money.
+///         BETA: unaudited. This deployment only accepts the coins listed at deployment and caps
+///         every deal at a fixed maximum per coin. The list and caps are immutable: there is no
+///         owner, no admin key and no way to change them after deployment.
 interface IERC20 {
     function balanceOf(address who) external view returns (uint256);
 }
@@ -34,6 +37,9 @@ contract TruceEscrow {
         keccak256("Settle(uint256 dealId,uint256 toSeller,uint256 toBuyer,bytes32 agreementDigest)");
     bytes32 public immutable DOMAIN_SEPARATOR;
 
+    /// @notice Per-coin maximum deal size; 0 means the coin is not accepted. address(0) = native coin.
+    mapping(address => uint256) public maxAmount;
+
     uint256 public nextId = 1;
     mapping(uint256 => Deal) public deals;
     uint256 private locked = 1;
@@ -52,6 +58,7 @@ contract TruceEscrow {
     error BadSplit();
     error BadSignature();
     error TransferFailed();
+    error NotAccepted();
 
     modifier nonReentrant() {
         if (locked != 1) revert BadState();
@@ -60,7 +67,13 @@ contract TruceEscrow {
         locked = 1;
     }
 
-    constructor() {
+    /// @param tokens coins accepted (address(0) = native coin); caps the maximum deal size for each.
+    constructor(address[] memory tokens, uint256[] memory caps) {
+        if (tokens.length != caps.length || tokens.length == 0) revert BadState();
+        for (uint256 i = 0; i < tokens.length; i++) {
+            if (caps[i] == 0) revert BadState();
+            maxAmount[tokens[i]] = caps[i];
+        }
         DOMAIN_SEPARATOR = keccak256(
             abi.encode(
                 keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)"),
@@ -81,6 +94,8 @@ contract TruceEscrow {
     {
         if (seller == address(0) || seller == msg.sender || amount == 0 || releaseAt <= block.timestamp) revert BadState();
         if (disputeTimeout < 1 days) revert BadState();
+        uint256 cap = maxAmount[token];
+        if (cap == 0 || amount > cap) revert NotAccepted();
         if (token == address(0)) {
             if (msg.value != amount) revert BadState();
         } else {
