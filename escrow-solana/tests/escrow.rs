@@ -329,18 +329,18 @@ async fn sol_settle_with_both_signatures() {
     let mut e = env().await;
     let (b, s) = (e.buyer.insecure_clone(), e.seller.insecure_clone());
     let (b0, s0) = (e.lamports(&b.pubkey()).await, e.lamports(&s.pubkey()).await);
-    let deal = e.open_sol(8, 10 * SOL, HOUR).await.unwrap();
+    let deal = e.open_sol(8, 10 * SOL / 2, HOUR).await.unwrap();
     e.send(&[ix::dispute(&pid(), &b.pubkey(), &deal)], &[&b]).await.unwrap();
 
     let digest = [0xabu8; 32];
     let split = |to_seller, to_buyer| EscrowInstruction::Settle { to_seller, to_buyer, agreement_digest: digest };
 
     // Bad split.
-    assert_eq!(code(e.payout(split(7 * SOL, 2 * SOL), &deal, None, &[&b, &s]).await), custom(EscrowError::BadSplit));
+    assert_eq!(code(e.payout(split(7 * SOL / 2, 2 * SOL / 2), &deal, None, &[&b, &s]).await), custom(EscrowError::BadSplit));
     assert_eq!(code(e.payout(split(u64::MAX, 2), &deal, None, &[&b, &s]).await), custom(EscrowError::BadSplit));
 
     // Only one party signing: the seller's signature is missing.
-    let mut one = ix::payout(&pid(), split(7 * SOL, 3 * SOL), &deal, &b.pubkey(), &s.pubkey(), None);
+    let mut one = ix::payout(&pid(), split(7 * SOL / 2, 3 * SOL / 2), &deal, &b.pubkey(), &s.pubkey(), None);
     one.accounts[2].is_signer = false;
     assert_eq!(code(e.send(&[one], &[&b]).await), custom(EscrowError::NotParty));
 
@@ -352,18 +352,18 @@ async fn sol_settle_with_both_signatures() {
             AccountMeta::new(b.pubkey(), true),
             AccountMeta::new(e.stranger.pubkey(), true),
         ],
-        data: split(7 * SOL, 3 * SOL).pack(),
+        data: split(7 * SOL / 2, 3 * SOL / 2).pack(),
     };
     let x = e.stranger.insecure_clone();
     assert_eq!(code(e.send(&[wrong], &[&b, &x]).await), custom(EscrowError::NotParty));
 
     // Both sign: paid out.
-    e.payout(split(7 * SOL, 3 * SOL), &deal, None, &[&b, &s]).await.unwrap();
-    assert_eq!(e.lamports(&s.pubkey()).await, s0 + 7 * SOL);
-    assert_eq!(e.lamports(&b.pubkey()).await, b0 - 7 * SOL);
+    e.payout(split(7 * SOL / 2, 3 * SOL / 2), &deal, None, &[&b, &s]).await.unwrap();
+    assert_eq!(e.lamports(&s.pubkey()).await, s0 + 7 * SOL / 2);
+    assert_eq!(e.lamports(&b.pubkey()).await, b0 - 7 * SOL / 2);
 
     // Replay: the deal is closed.
-    assert_eq!(code(e.payout(split(7 * SOL, 3 * SOL), &deal, None, &[&b, &s]).await), custom(EscrowError::BadAccount));
+    assert_eq!(code(e.payout(split(7 * SOL / 2, 3 * SOL / 2), &deal, None, &[&b, &s]).await), custom(EscrowError::BadAccount));
 }
 
 #[tokio::test]
@@ -534,4 +534,11 @@ async fn token_open_rejects_fake_token_program_and_wrong_vault() {
     let mut i = base;
     i.accounts[7].pubkey = TOKEN_2022_PROGRAM_ID; // mint not owned by the given token program
     assert_eq!(code(e.send(&[i], &[&b]).await), custom(EscrowError::BadAccount));
+}
+
+#[tokio::test]
+async fn beta_cap_on_sol() {
+    let mut e = env().await;
+    assert_eq!(code(e.open_sol(99, 5 * SOL + 1, HOUR).await.map(|_| ())), custom(EscrowError::Capped));
+    e.open_sol(100, 5 * SOL, HOUR).await.unwrap();
 }
