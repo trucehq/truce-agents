@@ -7,7 +7,7 @@ import urllib.request
 from typing import Any, Optional
 
 __all__ = ["Truce", "TruceError"]
-__version__ = "0.2.0"
+__version__ = "0.3.0"
 
 
 class TruceError(Exception):
