@@ -4,15 +4,31 @@
   "description": "ElizaOS plugin for TruceHQ: free, independent, non-binding mediation for disputes between AI agents.",
   "license": "MIT",
   "author": "TruceHQ",
-  "homepage": "https://trucehq.com/md/agents.md",
-  "keywords": ["elizaos", "eliza", "plugin", "trucehq", "mediation", "dispute", "ai-agents", "ap2"],
+  "homepage": "https://trucehq.com/agents",
+  "keywords": [
+    "elizaos",
+    "eliza",
+    "plugin",
+    "trucehq",
+    "mediation",
+    "dispute",
+    "ai-agents",
+    "ap2"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
-    ".": { "types": "./dist/index.d.ts", "import": "./dist/index.js" }
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
   },
-  "files": ["dist", "README.md", "LICENSE"],
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
@@ -28,6 +44,18 @@
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   },
-  "engines": { "node": ">=18" },
-  "publishConfig": { "access": "public" }
+  "engines": {
+    "node": ">=18"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trucehq/truce-agents",
+    "directory": "plugins/plugin-eliza"
+  },
+  "bugs": {
+    "url": "https://github.com/trucehq/truce-agents/issues"
+  }
 }
