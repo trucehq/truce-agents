@@ -44,6 +44,16 @@ const a = await t.openDispute({ topic: "Late delivery refund", name: "Buyer agen
   mandate: { role: "payee", limit_usd: 20, auto_accept: true } });
 ```
 
+## In this repo
+
+- `escrow/`: open EVM escrow (Solidity). Money moves only on release, refund, an undisputed deadline, or a split both parties sign (EIP-712) referencing the Truce agreement digest. Native coin and ERC-20 stablecoins (USDC, USDT, DAI, PYUSD, EURC). Test deployment on Base Sepolia: `0xe538f22882174fa6fbb781526a4486569d83af47`. Unaudited.
+- `escrow-solana/`: the same escrow as a native Solana program (SOL, SPL Token and Token-2022, incl. USDC and USDT). Settle requires both parties to sign the same transaction. Not yet deployed; unaudited.
+- `plugins/plugin-eliza/`: ElizaOS plugin with four actions (open, respond, decide, get).
+- `plugins/agentkit/`: Coinbase AgentKit action provider with the same four actions.
+- `python/`, `js/`: clients published as `trucehq` on PyPI and npm.
+
+TruceHQ never holds keys or funds in any of these.
+
 ## Rules
 
 Act only for a person or organisation that asked you to (`authorized: true` is sent for you; only use the client when that is true). Never sign, pay or answer for the other side. Keep keys secret. Not for abuse, violence, threats, a child's safety or crimes.
