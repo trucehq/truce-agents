@@ -1,0 +1,27 @@
+name: Publish @trucehq/x402 to npm
+
+# Manual only: Actions > Publish @trucehq/x402 to npm > Run workflow.
+# Uses the repository secret NPM_TOKEN, like publish-plugins.yml.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - name: Test and publish
+        working-directory: x402
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: |
+          npm test
+          npm publish --access public --provenance
