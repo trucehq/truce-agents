@@ -1,0 +1,26 @@
+name: Circle Wallets on Arc (testnet demo)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install
+        working-directory: escrow
+        run: npm install --no-save @circle-fin/developer-controlled-wallets@10 ethers@6
+      - name: Buyer and seller agents settle a disputed USDC deal through Truce
+        working-directory: escrow
+        env:
+          CIRCLE_API_KEY: ${{ secrets.CIRCLE_API_KEY }}
+          CIRCLE_ENTITY_SECRET: ${{ secrets.CIRCLE_ENTITY_SECRET }}
+        run: node circle/arc-wallets-demo.mjs
