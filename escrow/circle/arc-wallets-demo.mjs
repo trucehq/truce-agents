@@ -22,10 +22,7 @@ const TO_BUYER = AMOUNT - TO_SELLER; // 0.8 USDC back to the buyer
 for (const k of ['CIRCLE_API_KEY', 'CIRCLE_ENTITY_SECRET']) {
   if (!process.env[k]) throw new Error(`Missing ${k}`);
 }
-const circle = initiateDeveloperControlledWalletsClient({
-  apiKey: process.env.CIRCLE_API_KEY,
-  entitySecret: process.env.CIRCLE_ENTITY_SECRET,
-});
+let circle;
 const esc = new Interface(['function nextId() view returns (uint256)']);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const log = (...a) => console.log(new Date().toISOString().slice(11, 19), ...a);
@@ -96,33 +93,45 @@ async function signSettle(wallet, message) {
   return r.data.signature;
 }
 
-const { buyer, seller } = await wallets();
-log(`Buyer agent wallet  (Circle): ${buyer.address}`);
-log(`Seller agent wallet (Circle): ${seller.address}`);
+async function main() {
+  circle = initiateDeveloperControlledWalletsClient({
+    apiKey: process.env.CIRCLE_API_KEY.trim(),
+    entitySecret: process.env.CIRCLE_ENTITY_SECRET.trim(),
+  });
+  const { buyer, seller } = await wallets();
+  log(`Buyer agent wallet  (Circle): ${buyer.address}`);
+  log(`Seller agent wallet (Circle): ${seller.address}`);
 
-if ((await usdcBalance(buyer.address)) < AMOUNT + 1_000_000n) {
-  log('Requesting testnet USDC for the buyer from the Circle faucet');
-  await circle.requestTestnetTokens({ address: buyer.address, blockchain: CHAIN, usdc: true });
-  for (let i = 0; i < 60 && (await usdcBalance(buyer.address)) < AMOUNT; i++) await sleep(3000);
+  if ((await usdcBalance(buyer.address)) < AMOUNT + 1_000_000n) {
+    log('Requesting testnet USDC for the buyer from the Circle faucet');
+    await circle.requestTestnetTokens({ address: buyer.address, blockchain: CHAIN, usdc: true });
+    for (let i = 0; i < 60 && (await usdcBalance(buyer.address)) < AMOUNT; i++) await sleep(3000);
+  }
+  log(`Buyer USDC: ${Number(await usdcBalance(buyer.address)) / 1e6}`);
+
+  const dealId = BigInt(esc.decodeFunctionResult('nextId', await rpc('eth_call', [{ to: ESCROW, data: esc.encodeFunctionData('nextId') }, 'latest']))[0]);
+  const releaseAt = Math.floor(Date.now() / 1000) + 7200;
+
+  await call(buyer, 'Buyer approves 2 USDC', 'approve(address,uint256)', [ESCROW, AMOUNT.toString()]);
+  await call(buyer, `Buyer opens deal #${dealId}`, 'open(address,address,uint256,uint64,uint64)', [seller.address, USDC, AMOUNT.toString(), String(releaseAt), '86400']);
+  await call(buyer, `Buyer disputes deal #${dealId}`, 'dispute(uint256)', [dealId.toString()]);
+
+  const agreementDigest = keccak256(toUtf8Bytes(`TruceHQ Arc testnet Circle Wallets demo: deal ${dealId}, seller 1.2 USDC, buyer 0.8 USDC`));
+  const message = { dealId: dealId.toString(), toSeller: TO_SELLER.toString(), toBuyer: TO_BUYER.toString(), agreementDigest };
+  const sigBuyer = await signSettle(buyer, message);
+  const sigSeller = await signSettle(seller, message);
+  log('Both Circle wallets signed the same Truce settlement (EIP-712)');
+
+  const sellerBefore = await usdcBalance(seller.address);
+  await call(buyer, `Settlement paid out for deal #${dealId}`, 'settle(uint256,uint256,uint256,bytes32,bytes,bytes)', [
+    dealId.toString(), TO_SELLER.toString(), TO_BUYER.toString(), agreementDigest, sigBuyer, sigSeller,
+  ]);
+  log(`Seller received ${Number((await usdcBalance(seller.address)) - sellerBefore) / 1e6} USDC`);
+  log('Done.');
 }
-log(`Buyer USDC: ${Number(await usdcBalance(buyer.address)) / 1e6}`);
 
-const dealId = BigInt(esc.decodeFunctionResult('nextId', await rpc('eth_call', [{ to: ESCROW, data: esc.encodeFunctionData('nextId') }, 'latest']))[0]);
-const releaseAt = Math.floor(Date.now() / 1000) + 7200;
-
-await call(buyer, 'Buyer approves 2 USDC', 'approve(address,uint256)', [ESCROW, AMOUNT.toString()]);
-await call(buyer, `Buyer opens deal #${dealId}`, 'open(address,address,uint256,uint64,uint64)', [seller.address, USDC, AMOUNT.toString(), String(releaseAt), '86400']);
-await call(buyer, `Buyer disputes deal #${dealId}`, 'dispute(uint256)', [dealId.toString()]);
-
-const agreementDigest = keccak256(toUtf8Bytes(`TruceHQ Arc testnet Circle Wallets demo: deal ${dealId}, seller 1.2 USDC, buyer 0.8 USDC`));
-const message = { dealId: dealId.toString(), toSeller: TO_SELLER.toString(), toBuyer: TO_BUYER.toString(), agreementDigest };
-const sigBuyer = await signSettle(buyer, message);
-const sigSeller = await signSettle(seller, message);
-log('Both Circle wallets signed the same Truce settlement (EIP-712)');
-
-const sellerBefore = await usdcBalance(seller.address);
-await call(buyer, `Settlement paid out for deal #${dealId}`, 'settle(uint256,uint256,uint256,bytes32,bytes,bytes)', [
-  dealId.toString(), TO_SELLER.toString(), TO_BUYER.toString(), agreementDigest, sigBuyer, sigSeller,
-]);
-log(`Seller received ${Number((await usdcBalance(seller.address)) - sellerBefore) / 1e6} USDC`);
-log('Done.');
+main().catch((e) => {
+  const d = e?.response?.data;
+  console.error('FAILED:', e?.message || String(e), d ? JSON.stringify(d) : '');
+  process.exit(1);
+});
