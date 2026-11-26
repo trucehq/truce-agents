@@ -46,8 +46,9 @@ async function wallets() {
     const made = await circle.createWallets({ walletSetId: set.id, blockchains: [CHAIN], count: 2 - list.length, accountType: 'EOA' });
     list = list.concat(made.data.wallets);
   }
-  const [buyer, seller] = list.sort((a, b) => a.createDate.localeCompare(b.createDate));
-  return { buyer, seller };
+  // The funded wallet acts as the buyer agent; the other is the seller agent.
+  const [a, b] = list;
+  return (await usdcBalance(a.address)) >= (await usdcBalance(b.address)) ? { buyer: a, seller: b } : { buyer: b, seller: a };
 }
 
 async function waitTx(id, label) {
@@ -103,9 +104,7 @@ async function main() {
   log(`Seller agent wallet (Circle): ${seller.address}`);
 
   if ((await usdcBalance(buyer.address)) < AMOUNT + 1_000_000n) {
-    log('Requesting testnet USDC for the buyer from the Circle faucet');
-    await circle.requestTestnetTokens({ address: buyer.address, blockchain: CHAIN, usdc: true });
-    for (let i = 0; i < 60 && (await usdcBalance(buyer.address)) < AMOUNT; i++) await sleep(3000);
+    throw new Error(`Fund ${buyer.address} with testnet USDC on Arc at https://faucet.circle.com, then run again`);
   }
   log(`Buyer USDC: ${Number(await usdcBalance(buyer.address)) / 1e6}`);
 
