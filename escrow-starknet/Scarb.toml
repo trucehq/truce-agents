@@ -1,0 +1,46 @@
+[package]
+name = "truce_escrow"
+version = "0.1.0"
+edition = "2024_07"
+cairo-version = "2.18.0"
+description = "TruceEscrow for Starknet: non-custodial escrow with a neutral, two-party-signed settlement step"
+license = "MIT"
+license-file = "LICENSE"
+
+[dependencies]
+starknet = "2.18.0"
+openzeppelin_interfaces = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v4.0.1" }
+openzeppelin_utils = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v4.0.1" }
+
+[dev-dependencies]
+assert_macros = "2.18.0"
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.59.0" }
+# Test-only: OpenZeppelin's ERC-20 and account presets, deployed in the tests.
+openzeppelin_presets = { git = "https://github.com/OpenZeppelin/cairo-contracts.git", tag = "v4.0.1" }
+
+[[target.starknet-contract]]
+sierra = true
+casm = true
+
+[[test]]
+name = "truce_escrow_integrationtest"
+kind = "test"
+source-path = "./tests/lib.cairo"
+test-type = "integration"
+build-external-contracts = [
+    "truce_escrow::escrow::TruceEscrow",
+    "openzeppelin_presets::erc20::ERC20Upgradeable",
+    "openzeppelin_presets::account::AccountUpgradeable",
+]
+
+[scripts]
+test = "snforge test"
+
+[tool.scarb]
+allow-prebuilt-plugins = ["snforge_std"]
+
+# scarbs.xyz was not reachable from the machine this was built on, so OpenZeppelin's own registry
+# reference to snforge_std (in its workspace) is redirected to the same tagged git release.
+# Scarb prints "patch ... has not been used", but resolution fails without it.
+[patch.scarbs-xyz]
+snforge_std = { git = "https://github.com/foundry-rs/starknet-foundry.git", tag = "v0.59.0" }
